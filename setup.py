@@ -1,5 +1,6 @@
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
+from distutils.sysconfig import get_config_var
 
 import numpy as np
 
@@ -11,7 +12,7 @@ setup(
   packages = ['udunits'],
   ext_modules =  Extension('udunits.__init__', ['lib/udunits/__init__.pyx'],
                            include_dirs=[get_config_var('INCLUDEDIR'), np.get_include()],
-                  libraries=['netcdf'],
+                  libraries=['libc', 'netcdf'],
                   library_dirs=[get_config_var('LIBDIR')],
                   **extra_extension_args
                   ),
