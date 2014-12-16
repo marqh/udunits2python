@@ -10,11 +10,12 @@ setup(
   description = 'Python package for accessing udunits2 from unidata',
   package_dir = {'': 'lib'},
   packages = ['udunits'],
-  ext_modules =  Extension('udunits.__init__', ['lib/udunits/__init__.pyx'],
+  ext_modules =  cythonize([Extension('udunits.__init__', ['lib/udunits/__init__.pyx'],
                            include_dirs=[get_config_var('INCLUDEDIR'), np.get_include()],
-                  libraries=['libc', 'netcdf'],
+                  #libraries=['libc', 'netcdf'],
+                  libraries=['udunits2'],
                   library_dirs=[get_config_var('LIBDIR')],
-                  **extra_extension_args
-                  ),
+                  #**extra_extension_args
+                  )]),
 )
 

@@ -297,6 +297,31 @@ if not _ud_system:
 #
 ########################################################################
 
+_CACHE = {}
+
+
+def as_unit(unit):
+    """
+    Returns a Unit corresponding to the given unit.
+
+    .. note::
+
+        If the given unit is already a Unit it will be returned unchanged.
+
+    """
+    if isinstance(unit, Unit):
+        result = unit
+    else:
+        result = None
+        use_cache = isinstance(unit, basestring) or unit is None
+        if use_cache:
+            result = _CACHE.get(unit)
+        if result is None:
+            result = Unit(unit)
+            if use_cache:
+                _CACHE[unit] = result
+    return result
+
 
 class Unit(object):
     """
@@ -770,116 +795,116 @@ class Unit(object):
             result = self.format(UT_DEFINITION)
         return result
 
-    def invert(self):
-        """
-        Invert the unit i.e. find the reciprocal of the unit, and return
-        the Unit result.
+    # def invert(self):
+    #     """
+    #     Invert the unit i.e. find the reciprocal of the unit, and return
+    #     the Unit result.
 
-        Returns:
-            Unit.
+    #     Returns:
+    #         Unit.
 
-        For example:
+    #     For example:
 
-            >>> import iris.unit as unit
-            >>> u = unit.Unit('meters')
-            >>> u.invert()
-            Unit('meter^-1')
+    #         >>> import iris.unit as unit
+    #         >>> u = unit.Unit('meters')
+    #         >>> u.invert()
+    #         Unit('meter^-1')
 
-        """
-        if self.is_unknown():
-            result = self
-        elif self.is_no_unit():
-            raise ValueError("Cannot invert a 'no-unit'.")
-        else:
-            ut_unit = _ut_invert(self.ut_unit)
-            if not ut_unit:
-                self._raise_error('Failed to invert %r' % self)
-            calendar = None
-            result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
-        return result
+    #     """
+    #     if self.is_unknown():
+    #         result = self
+    #     elif self.is_no_unit():
+    #         raise ValueError("Cannot invert a 'no-unit'.")
+    #     else:
+    #         ut_unit = _ut_invert(self.ut_unit)
+    #         if not ut_unit:
+    #             self._raise_error('Failed to invert %r' % self)
+    #         calendar = None
+    #         result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
+    #     return result
 
-    def root(self, root):
-        """
-        Returns the given root of the unit.
+    # def root(self, root):
+    #     """
+    #     Returns the given root of the unit.
 
-        Args:
+    #     Args:
 
-        * root (int/long): Value by which the unit root is taken.
+    #     * root (int/long): Value by which the unit root is taken.
 
-        Returns:
-            None.
+    #     Returns:
+    #         None.
 
-        For example:
+    #     For example:
 
-            >>> import iris.unit as unit
-            >>> u = unit.Unit('meters^2')
-            >>> u.root(2)
-            Unit('meter')
+    #         >>> import iris.unit as unit
+    #         >>> u = unit.Unit('meters^2')
+    #         >>> u.root(2)
+    #         Unit('meter')
 
-        .. note::
+    #     .. note::
 
-            Taking a fractional root of a unit is not supported.
+    #         Taking a fractional root of a unit is not supported.
 
-        """
-        try:
-            root = ctypes.c_int(root)
-        except TypeError:
-            raise TypeError('An int or long type for the root argument'
-                            ' is required')
+    #     """
+    #     try:
+    #         root = ctypes.c_int(root)
+    #     except TypeError:
+    #         raise TypeError('An int or long type for the root argument'
+    #                         ' is required')
 
-        if self.is_unknown():
-            result = self
-        elif self.is_no_unit():
-            raise ValueError("Cannot take the logarithm of a 'no-unit'.")
-        else:
-            # only update the unit if it is not scalar
-            if self == Unit('1'):
-                result = self
-            else:
-                ut_unit = _ut_root(self.ut_unit, root)
-                if not ut_unit:
-                    self._raise_error('Failed to take the root of %r' % self)
-                calendar = None
-                result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
-        return result
+    #     if self.is_unknown():
+    #         result = self
+    #     elif self.is_no_unit():
+    #         raise ValueError("Cannot take the logarithm of a 'no-unit'.")
+    #     else:
+    #         # only update the unit if it is not scalar
+    #         if self == Unit('1'):
+    #             result = self
+    #         else:
+    #             ut_unit = _ut_root(self.ut_unit, root)
+    #             if not ut_unit:
+    #                 self._raise_error('Failed to take the root of %r' % self)
+    #             calendar = None
+    #             result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
+    #     return result
 
-    def log(self, base):
-        """
-        Returns the logorithmic unit corresponding to the given
-        logorithmic base.
+    # def log(self, base):
+    #     """
+    #     Returns the logorithmic unit corresponding to the given
+    #     logorithmic base.
 
-        Args:
+    #     Args:
 
-        * base (int/float/long): Value of the logorithmic base.
+    #     * base (int/float/long): Value of the logorithmic base.
 
-        Returns:
-            None.
+    #     Returns:
+    #         None.
 
-        For example:
+    #     For example:
 
-            >>> import iris.unit as unit
-            >>> u = unit.Unit('meters')
-            >>> u.log(2)
-            Unit('lb(re 1 meter)')
+    #         >>> import iris.unit as unit
+    #         >>> u = unit.Unit('meters')
+    #         >>> u.log(2)
+    #         Unit('lb(re 1 meter)')
 
-        """
-        try:
-            base = ctypes.c_double(base)
-        except TypeError:
-            raise TypeError('A numeric type for the base argument is required')
+    #     """
+    #     try:
+    #         base = ctypes.c_double(base)
+    #     except TypeError:
+    #         raise TypeError('A numeric type for the base argument is required')
 
-        if self.is_unknown():
-            result = self
-        elif self.is_no_unit():
-            raise ValueError("Cannot take the logarithm of a 'no-unit'.")
-        else:
-            ut_unit = _ut_log(base, self.ut_unit)
-            if not ut_unit:
-                msg = 'Failed to calculate logorithmic base of %r' % self
-                self._raise_error(msg)
-            calendar = None
-            result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
-        return result
+    #     if self.is_unknown():
+    #         result = self
+    #     elif self.is_no_unit():
+    #         raise ValueError("Cannot take the logarithm of a 'no-unit'.")
+    #     else:
+    #         ut_unit = _ut_log(base, self.ut_unit)
+    #         if not ut_unit:
+    #             msg = 'Failed to calculate logorithmic base of %r' % self
+    #             self._raise_error(msg)
+    #         calendar = None
+    #         result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
+    #     return result
 
     def __str__(self):
         """
@@ -921,23 +946,23 @@ class Unit(object):
                                                   self, self.calendar)
         return result
 
-    def _offset_common(self, offset):
-        try:
-            offset = ctypes.c_double(offset)
-        except TypeError:
-            result = NotImplemented
-        else:
-            if self.is_unknown():
-                result = self
-            elif self.is_no_unit():
-                raise ValueError("Cannot offset a 'no-unit'.")
-            else:
-                ut_unit = _ut_offset(self.ut_unit, offset)
-                if not ut_unit:
-                    self._raise_error('Failed to offset %r' % self)
-                calendar = None
-                result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
-        return result
+    # def _offset_common(self, offset):
+    #     try:
+    #         offset = ctypes.c_double(offset)
+    #     except TypeError:
+    #         result = NotImplemented
+    #     else:
+    #         if self.is_unknown():
+    #             result = self
+    #         elif self.is_no_unit():
+    #             raise ValueError("Cannot offset a 'no-unit'.")
+    #         else:
+    #             ut_unit = _ut_offset(self.ut_unit, offset)
+    #             if not ut_unit:
+    #                 self._raise_error('Failed to offset %r' % self)
+    #             calendar = None
+    #             result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
+    #     return result
 
     def __add__(self, other):
         return self._offset_common(other)
@@ -951,27 +976,27 @@ class Unit(object):
             result = self._offset_common(-other)
         return result
 
-    def _op_common(self, other, op_func):
-        # Convienience method to create a new unit from an operation between
-        # the units 'self' and 'other'.
+    # def _op_common(self, other, op_func):
+    #     # Convienience method to create a new unit from an operation between
+    #     # the units 'self' and 'other'.
 
-        op_label = op_func.__name__.split('_')[1]
+    #     op_label = op_func.__name__.split('_')[1]
 
-        other = as_unit(other)
+    #     other = as_unit(other)
 
-        if self.is_no_unit() or other.is_no_unit():
-            raise ValueError("Cannot %s a 'no-unit'." % op_label)
+    #     if self.is_no_unit() or other.is_no_unit():
+    #         raise ValueError("Cannot %s a 'no-unit'." % op_label)
 
-        if self.is_unknown() or other.is_unknown():
-            result = _Unit(_CATEGORY_UNKNOWN, None)
-        else:
-            ut_unit = op_func(self.ut_unit, other.ut_unit)
-            if not ut_unit:
-                msg = 'Failed to %s %r by %r' % (op_label, self, other)
-                self._raise_error(msg)
-            calendar = None
-            result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
-        return result
+    #     if self.is_unknown() or other.is_unknown():
+    #         result = _Unit(_CATEGORY_UNKNOWN, None)
+    #     else:
+    #         ut_unit = op_func(self.ut_unit, other.ut_unit)
+    #         if not ut_unit:
+    #             msg = 'Failed to %s %r by %r' % (op_label, self, other)
+    #             self._raise_error(msg)
+    #         calendar = None
+    #         result = _Unit(_CATEGORY_UDUNIT, ut_unit, calendar)
+    #     return result
 
     def __rmul__(self, other):
         # NB. Because we've subclassed a tuple, we need to define this to
@@ -1058,66 +1083,66 @@ class Unit(object):
         """
         return self.__div__(other)
 
-    def __pow__(self, power):
-        """
-        Raise the unit by the given power and return the Unit result.
+    # def __pow__(self, power):
+    #     """
+    #     Raise the unit by the given power and return the Unit result.
 
-        Note that, UDUNITS-2 does not support raising a
-        non-dimensionless unit by a fractional power.
-        Approximate floating point power behaviour has been implemented
-        specifically for Iris.
+    #     Note that, UDUNITS-2 does not support raising a
+    #     non-dimensionless unit by a fractional power.
+    #     Approximate floating point power behaviour has been implemented
+    #     specifically for Iris.
 
-        Args:
+    #     Args:
 
-        * power (int/float/long): Value by which the unit power is raised.
+    #     * power (int/float/long): Value by which the unit power is raised.
 
-        Returns:
-            Unit.
+    #     Returns:
+    #         Unit.
 
-        For example:
+    #     For example:
 
-            >>> import iris.unit as unit
-            >>> u = unit.Unit('meters')
-            >>> u**2
-            Unit('meter^2')
+    #         >>> import iris.unit as unit
+    #         >>> u = unit.Unit('meters')
+    #         >>> u**2
+    #         Unit('meter^2')
 
-        """
-        try:
-            power = float(power)
-        except ValueError:
-            raise TypeError('A numeric value is required for the power'
-                            ' argument.')
+    #     """
+    #     try:
+    #         power = float(power)
+    #     except ValueError:
+    #         raise TypeError('A numeric value is required for the power'
+    #                         ' argument.')
 
-        if self.is_unknown():
-            result = self
-        elif self.is_no_unit():
-            raise ValueError("Cannot raise the power of a 'no-unit'.")
-        elif self == Unit('1'):
-            # 1 ** N -> 1
-            result = self
-        else:
-            # UDUNITS-2 does not support floating point raise/root.
-            # But if the power is of the form 1/N, where N is an integer
-            # (within a certain acceptable accuracy) then we can find the Nth
-            # root.
-            if not iris.util.approx_equal(power, 0.0) and abs(power) < 1:
-                if not iris.util.approx_equal(1 / power, round(1 / power)):
-                    raise ValueError('Cannot raise a unit by a decimal.')
-                root = int(round(1 / power))
-                result = self.root(root)
-            else:
-                # Failing that, check for powers which are (very nearly) simple
-                # integer values.
-                if not iris.util.approx_equal(power, round(power)):
-                    msg = 'Cannot raise a unit by a decimal (got %s).' % power
-                    raise ValueError(msg)
-                power = int(round(power))
+    #     if self.is_unknown():
+    #         result = self
+    #     elif self.is_no_unit():
+    #         raise ValueError("Cannot raise the power of a 'no-unit'.")
+    #     elif self == Unit('1'):
+    #         # 1 ** N -> 1
+    #         result = self
+    #     else:
+    #         # UDUNITS-2 does not support floating point raise/root.
+    #         # But if the power is of the form 1/N, where N is an integer
+    #         # (within a certain acceptable accuracy) then we can find the Nth
+    #         # root.
+    #         if not iris.util.approx_equal(power, 0.0) and abs(power) < 1:
+    #             if not iris.util.approx_equal(1 / power, round(1 / power)):
+    #                 raise ValueError('Cannot raise a unit by a decimal.')
+    #             root = int(round(1 / power))
+    #             result = self.root(root)
+    #         else:
+    #             # Failing that, check for powers which are (very nearly) simple
+    #             # integer values.
+    #             if not iris.util.approx_equal(power, round(power)):
+    #                 msg = 'Cannot raise a unit by a decimal (got %s).' % power
+    #                 raise ValueError(msg)
+    #             power = int(round(power))
 
-                ut_unit = _ut_raise(self.ut_unit, ctypes.c_int(power))
-                if not ut_unit:
-                    self._raise_error('Failed to raise the power of %r' % self)
-                result = _Unit(_CATEGORY_UDUNIT, ut_unit)
-        return result
+    #             ut_unit = _ut_raise(self.ut_unit, ctypes.c_int(power))
+    #             if not ut_unit:
+    #                 self._raise_error('Failed to raise the power of %r' % self)
+    #             result = _Unit(_CATEGORY_UDUNIT, ut_unit)
+    #     return result
 
     def _identity(self):
         # Redefine the comparison/hash/ordering identity as used by
@@ -1237,12 +1262,13 @@ class Unit(object):
         if self.is_convertible(other):
             # Use utime for converting reference times that are not using a
             # gregorian calendar as it handles these and udunits does not.
-            if self.is_time_reference() \
-                    and self.calendar != CALENDAR_GREGORIAN:
-                ut1 = self.utime()
-                ut2 = other.utime()
-                result = ut2.date2num(ut1.num2date(value_copy))
-            else:
+            # if self.is_time_reference() \
+            #         and self.calendar != CALENDAR_GREGORIAN:
+            #     ut1 = self.utime()
+            #     ut2 = other.utime()
+            #     result = ut2.date2num(ut1.num2date(value_copy))
+            # else:
+            if True:
                 ut_converter = _ut_get_converter(self.ut_unit, other.ut_unit)
                 if ut_converter:
                     if isinstance(value_copy, np.ndarray):
